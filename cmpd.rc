@@ -1,1 +1,53 @@
-/home/sent/.scripts/cmpd.rc
+#!/usr/bin/env rc
+#
+# cmpd - client for mpd in rc
+# need mpc
+
+if (~ $1 -h -help --help help) {
+  printf 'usage: cmpd [-h]\ncommands:\n[n]\tplay n\nd/r\tremove song\np\ttoggle play/pause\nu\tupdate database\ns\tstop\nrn\ttoggle random\nrp\ttoggle repeat\nsn\ttoggle single\nc cn\ttoggle consume\ne q ESC\texit\n'
+  exit
+}
+c=1
+m=`{mpc current}
+for (i in `` ($nl) {mpc playlist}) {
+  if (~ $i $"m) {
+    printf '| %02d %s\n' $c $i
+  } else {
+    printf '  %02d %s\n' $c $i
+  }
+  c=`{expr $c + 1}
+}
+
+echo -n '> '
+a=`{awk '{print;exit}'}
+switch ($a(1)) {
+  case [1-99]
+    mpc play $a(1) > /dev/null
+    echo playing `{mpc current}
+  case d r
+    mpc del $a(2) > /dev/null
+    echo deleted $a(2)
+  case p
+    mpc toggle > /dev/null
+    echo toggle
+  case u
+    mpc update $a(2) > /dev/null
+    echo updated
+  case s
+    mpc stop > /dev/null
+    echo stop
+  case rn
+    mpc random > /dev/null
+    echo random
+  case rp
+    mpc repeat > /dev/null
+    echo repeat
+  case sn
+    mpc single > /dev/null
+    echo single
+  case c cn
+    mpc consume > /dev/null
+    echo consume
+  case e exit q quit 
+    exit
+}

@@ -1,1 +1,32 @@
-/home/sent/.scripts/gg.rc
+#!/usr/bin/env rc
+#
+# gg - git helper
+#need git
+
+c = $*
+
+if (~ $c ()) {
+  git status
+  exit
+}
+
+switch ($c(1)) {
+  case a
+    echo gg- adding ''''$c(2)^'''' to INDEX
+    #git add $c(2)
+  case r
+    echo gg- unstaging ''''$c(2)^'''' from INDEX
+    #git reset HEAD $c(2)
+  case c
+    echo gg- "$c(2)^"
+    echo gg- commit? [y/n]
+    a=`{awk '{print;exit}'}
+    if (~ $a (y Y)) {
+      echo gg- yes
+      #git commit -m
+    } else {
+      echo gg- ok
+    }
+  case *
+    echo gg- ???
+}

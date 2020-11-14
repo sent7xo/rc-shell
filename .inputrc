@@ -1,1 +1,12 @@
-/home/sent/.inputrc
+$include /etc/inputrc
+"\en": history-search-forward
+"\ep": history-search-backward
+
+set expand-tilde on
+set completion-ignore-case on
+set show-all-if-ambiguous on
+#set editing-mode vi
+set colored-completion-prefix on
+set colored-stats on
+
+set keyseq-timeout 0

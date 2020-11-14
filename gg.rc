@@ -3,30 +3,56 @@
 # gg - git helper
 #need git
 
-c = $*
+c = $1 #cmd
 
 if (~ $c ()) {
   git status
   exit
 }
 
-switch ($c(1)) {
-  case a
-    echo gg- adding ''''$c(2)^'''' to INDEX
-    #git add $c(2)
-  case r
-    echo gg- unstaging ''''$c(2)^'''' from INDEX
-    #git reset HEAD $c(2)
-  case c
-    echo gg- "$c(2)^"
-    echo gg- commit? [y/n]
-    a=`{awk '{print;exit}'}
-    if (~ $a (y Y)) {
-      echo gg- yes
-      #git commit -m
+shift
+a = $* #args
+
+fn ask {
+  r = () {
+    r = `{awk '{print;exit}'}
+    if (~ $r (y Y)) {
+      return 0
     } else {
-      echo gg- ok
+      return 1
     }
+  }
+}
+
+switch ($c) {
+  case a add
+    echo gg- adding "$a^" to INDEX
+    git add $^a
+
+  case u unstage
+    echo gg- unstaging "^$a^" from INDEX
+    #git reset HEAD $^a
+
+  case dc discard
+    echo gg- "$a^"
+    echo gg- discard changes? [y/n]
+    if ( ask ) {
+      echo gg- yes
+    #git checkout -- $^a
+    } else {
+      echo gg- abort
+    }
+
+  case c
+    echo gg- "$a^"
+    echo gg- commit? [y/n]
+    if ( ask ) {
+      echo gg- yes
+      git commit -m $^a
+    } else {
+      echo gg- abort
+    }
+
   case *
     echo gg- ???
 }

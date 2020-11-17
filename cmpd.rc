@@ -3,51 +3,98 @@
 # cmpd - client for mpd in rc
 # need mpc
 
-if (~ $1 -h -help --help help) {
-  printf 'usage: cmpd [-h]\ncommands:\n[n]\tplay n\nd/r\tremove song\np\ttoggle play/pause\nu\tupdate database\ns\tstop\nrn\ttoggle random\nrp\ttoggle repeat\nsn\ttoggle single\nc cn\ttoggle consume\ne q ESC\texit\n'
+help_msg='usage: cmpd [-h]\ncommands:\n[n]\tplay n\nd/r\tremove song\np\ttoggle play/pause\nu\tupdate database\ns\tstop\nrn\ttoggle random\nrp\ttoggle repeat\nsn\ttoggle single\nc cn\ttoggle consume\ne q ESC\texit\n'
+
+if (~ $1 h -h help -help --help) {
+  printf $help_msg
   exit
 }
-c=1
-m=`{mpc current}
-for (i in `` ($nl) {mpc playlist}) {
-  if (~ $i $"m) {
-    printf '| %02d %s\n' $c $i
-  } else {
-    printf '  %02d %s\n' $c $i
+
+fn list {
+  m=`{mpc current}
+  c=1 for (i in `` ($nl) {mpc playlist}) {
+    if (~ $i $"m) {
+      printf '| %02d %s\n' $c $i
+    } else {
+      printf '  %02d %s\n' $c $i
+    }
+    c=`{expr $c + 1}
   }
-  c=`{expr $c + 1}
 }
+
+list
+
+while (true) {
 
 echo -n '> '
 a=`{awk '{print;exit}'}
 switch ($a(1)) {
+  case l list
+    list
+
   case [1-99]
     mpc play $a(1) > /dev/null
     echo playing `{mpc current}
-  case d r
+  case d delete
+    if (~ $a(2) ()) {
+      echo list	a ARTIST
+      echo select	a ARTIST NUMBER
+      continue
+    }
     mpc del $a(2) > /dev/null
     echo deleted $a(2)
-  case p
+  case p toggle
     mpc toggle > /dev/null
     echo toggle
-  case u
+  case u update
     mpc update $a(2) > /dev/null
     echo updated
-  case s
+  case s stop
     mpc stop > /dev/null
     echo stop
-  case rn
-    mpc random > /dev/null
-    echo random
-  case rp
-    mpc repeat > /dev/null
-    echo repeat
-  case sn
-    mpc single > /dev/null
-    echo single
-  case c cn
-    mpc consume > /dev/null
-    echo consume
+
+  case a add
+    if (~ $a(2) ()) {
+      echo list	a ARTIST
+      echo select	a ARTIST NUMBER
+      continue
+    }
+    n=`` ($nl) {mpc search artist $a(2)}
+    if (~ $n ()) { echo none; continue }
+
+    if (! ~ $a(3) () && ! test $a(3) -gt $#n) {
+      mpc add $n($a(3))
+      continue
+    }
+
+    m=1 for (o in `` ($nl) {printf '%s' $n$nl | sed 's/windows\///'}) {
+      printf '%02d %s\n' $m $o
+      m=`{expr $m + 1}
+    }
+
+  case z random
+    n=`{mpc random | tail -n 1 | awk '{print $6}'}
+    echo random $n
+  case r repeat
+    n=`{mpc repeat | tail -n 1 | awk '{print $4}'}
+    echo repeat $n
+  case y single
+    n=`{mpc single | tail -n 1 | awk '{print $8}'}
+    echo single $n
+  case c consume
+    n=`{mpc consume | tail -n 1 | awk '{print $10}'}
+    echo consume $n
+
+  case v vol volume
+    n=`{mpc volume $a(2) | tail -n 1 | awk '{print $2}' | sed 's/%//'}
+    echo volume $n
+
+  case h help
+    printf $help_msg
   case e exit q quit 
     exit
+  case *
+    echo ???
+}
+
 }
